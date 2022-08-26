@@ -50,7 +50,7 @@ class RAFTOpticalFlow:
                  alternate_corr=False):
 
         if model is None:
-            model_path = join(dirname(abspath(getsourcefile(lambda:0))), "models")
+            model_path = join(dirname(abspath(getsourcefile(lambda: 0))), "models")
             model = join(model_path, "raft-casme2.pth")
         if not exists(model):
             if not isdir(model_path):
@@ -60,7 +60,7 @@ class RAFTOpticalFlow:
             ssl._create_default_https_context = ssl._create_unverified_context
             urlretrieve("https://cloud.hiz-saarland.de/s/McMNXZ5o7xteE6n/download/raft-casme2.pth", model)
             print("done.")
-        
+
         args = argparse.Namespace(
             model=model,
             path=path,
@@ -73,7 +73,8 @@ class RAFTOpticalFlow:
         model.load_state_dict(torch.load(args.model))
 
         self.model = model.module
-        self.model.to('cuda')
+        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.model.to(self.device)
         self.model.eval()
         self.last_flow = None
         self.padder = None
@@ -81,9 +82,9 @@ class RAFTOpticalFlow:
 
     def calc(self, ref, frame, flow=None):
         ref_torch = torch.from_numpy(ref).permute(2, 0, 1).float()
-        ref_torch = ref_torch[None].to('cuda')
+        ref_torch = ref_torch[None].to(self.device)
         frame_torch = torch.from_numpy(frame).permute(2, 0, 1).float()
-        frame_torch = frame_torch[None].to('cuda')
+        frame_torch = frame_torch[None].to(self.device)
 
         if self.padder is None:
             self.padder = InputPadder(ref_torch.shape)
