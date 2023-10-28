@@ -162,3 +162,24 @@ def map_temp(data, cam="A655"):
         return (0.01 * data) - 273.15
     else:
         print("camera not implemented!")
+
+
+class Debayerer:
+    def __init__(self, pattern=cv2.COLOR_BAYER_RG2BGR, nh=2):
+
+        self.pattern = pattern
+        colors = np.array([150, 255, 150])
+
+        self.reference = colors.reshape((1, 1, -1))
+
+    def set_white_balance(self, colors):
+        if isinstance(colors, np.ndarray):
+            assert np.sum(colors.shape) == 3
+        else:
+            assert len(colors) == 3
+        self.reference = np.expand_dims(np.mean(np.squeeze(np.array(colors)), axis=0).astype(float), (0, 1))
+
+    def __call__(self, img):
+        tmp = ((cv2.cvtColor(img, self.pattern).astype(float) / self.reference) * 255)
+        tmp[tmp > 255] = 255
+        return tmp.astype(np.uint8)

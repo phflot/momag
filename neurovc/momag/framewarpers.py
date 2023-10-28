@@ -106,8 +106,8 @@ class OnlineFrameWarper:
             out_indices_x.append(np.arange(self.image_size[0]).repeat(2)[::is_reversed])
             out_indices_y.append(np.tile(np.array([i, i+1]), self.image_size[0]))
 
-        out_indices_x = np.concatenate(out_indices_x).astype(np.int)
-        out_indices_y = np.concatenate(out_indices_y).astype(np.int)
+        out_indices_x = np.concatenate(out_indices_x).astype(int)
+        out_indices_y = np.concatenate(out_indices_y).astype(int)
         return np.stack((out_indices_x, out_indices_y), axis=1)
 
     def read_frame_buffer(self):
@@ -120,7 +120,7 @@ class OnlineFrameWarper:
         return out
 
     def warp_image(self, image, displacements, depth):
-        assert image.dtype == displacements.dtype == depth.dtype == np.float
+        assert image.dtype == displacements.dtype == depth.dtype == float
         assert np.all(np.logical_and(image <= 1.0, image >= 0.0))
         assert image.shape[:2] == displacements.shape[:2] == depth.shape == self.image_size
 
@@ -140,7 +140,7 @@ class OnlineFrameWarper:
     def warp_image_uv(self, image, uv):
         m, n = uv.shape[0:2]
 
-        x, y = np.meshgrid(np.arange(n).astype(np.float), np.arange(m).astype(np.float))
+        x, y = np.meshgrid(np.arange(n).astype(float), np.arange(m).astype(float))
 
         tmp_flow = np.empty(uv.shape, float)
         tmp_flow[:, :, 0] = y + uv[:, :, 1]

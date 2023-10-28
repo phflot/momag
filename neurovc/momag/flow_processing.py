@@ -123,8 +123,9 @@ class OnlineLandmarkMagnifier:
             OF_inst.setFinestScale(0)
             OF_inst.setVariationalRefinementDelta(0.2)
             OF_inst.setVariationalRefinementGamma(0.8)
-            OF_inst.setVariationalRefinementAlpha(10)
+            OF_inst.setVariationalRefinementAlpha(4)
             OF_inst.setVariationalRefinementIterations(10)
+            self.OF_inst = OF_inst
             self._augmentor = lambda f: cv2.cvtColor(f, cv2.COLOR_RGB2GRAY)
 
         mp_drawing = mp.solutions.drawing_utils
