@@ -139,17 +139,11 @@ class FlowDecomposer:
         return img_out.astype(img.dtype)
 
 
-attenuation_functions = {
-    "linear": None,
-    "log": lambda G_mag, alpha, beta: np.log(1 + alpha * G_mag) / np.log(1 + alpha),
-    "compressive": None,
-}
-
-
 class OnlineLandmarkMagnifier:
-    def __init__(self, landmarks=neurovc.LM_MOUTH, alpha=15, reference=None):
+    def __init__(self, landmarks=neurovc.LM_MOUTH, alpha=15, reference=None, attenuation_function=None):
         self._augmentor = None
-        self._attenuation_function = None
+        if attenuation_function is None:
+            self._attenuation_function = ConstCompressor(alpha)
         try:
             import torch
             self.OF_inst = RAFTOpticalFlow()
@@ -201,7 +195,9 @@ class OnlineLandmarkMagnifier:
 
         w = self.OF_inst.calc(self._augmentor(self.ref), self._augmentor(frame), None)
         w_global, w_local = self.decomposer.decompose(w)
-        magnified = self.framewarper.warp_image_uv(warp_image_backwards(frame, w), w_global + self.alpha * w_local)
+        # magnified = self.framewarper.warp_image_uv(warp_image_backwards(frame, w), w_global + self.alpha * w_local)
+        magnified = self.framewarper.warp_image_uv(warp_image_backwards(frame, w), w_global +
+                                                   self._attenuation_function(w_local))
         flow_local = flow_to_image(w_local)
         flow_global = flow_to_image(w_global)
         flow = flow_to_image(w)
