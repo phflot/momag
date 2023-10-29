@@ -30,18 +30,18 @@ def compressive_function(G_mag, alpha, beta):
 
 class MagnitudeCompressor:
     def __call__(self, w):
-        g_mag = get_motion_magnitude(w)
-        w /= g_mag
+        g_mag = np.repeat(get_motion_magnitude(w)[:, :, None], 2, axis=2)
+        w /= g_mag + 0.0001
         g_comp = self.comp(g_mag)
         return g_comp * w
 
 
-class GradMagnitudeCompressor:
+class GradMagnitudeCompressor(MagnitudeCompressor):
     def __init__(self, **kwargs):
         self.comp = lambda x: compressive_function(x, **kwargs)
 
 
-class ConstCompressor:
+class ConstCompressor(MagnitudeCompressor):
     def __init__(self, alpha):
         self.comp = lambda x: alpha * x
 
@@ -52,7 +52,7 @@ def compressive_function_thresh(G_mag, alpha, threshold):
     return g_comp
 
 
-class ThreshCompressor:
+class ThreshCompressor(MagnitudeCompressor):
     def __init__(self, alpha, threshold):
         self.comp = lambda x: compressive_function_thresh(x, alpha, threshold)
 
