@@ -144,6 +144,8 @@ class OnlineLandmarkMagnifier:
         self._augmentor = None
         if attenuation_function is None:
             self._attenuation_function = ConstCompressor(alpha)
+        else:
+            self._attenuation_function = attenuation_function
         try:
             import torch
             self.OF_inst = RAFTOpticalFlow()
