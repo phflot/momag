@@ -18,6 +18,45 @@ def get_motion_magnitude(w):
     return np.sqrt(w[:, :, 0] * w[:, :, 0] + w[:, :, 1] * w[:, :, 1])
 
 
+def compressive_function(G_mag, alpha, beta):
+    eps = 0.1
+    beta = 1 - beta
+    G_mag[G_mag < eps] = eps
+    g_comp = (alpha / G_mag) * np.power((G_mag / alpha), beta)
+    g_comp[g_comp < 1] = 1
+
+    return g_comp
+
+
+class MagnitudeCompressor:
+    def __call__(self, w):
+        g_mag = get_motion_magnitude(w)
+        w /= g_mag
+        g_comp = self.comp(g_mag)
+        return g_comp * w
+
+
+class GradMagnitudeCompressor:
+    def __init__(self, **kwargs):
+        self.comp = lambda x: compressive_function(x, **kwargs)
+
+
+class ConstCompressor:
+    def __init__(self, alpha):
+        self.comp = lambda x: alpha * x
+
+
+def compressive_function_thresh(G_mag, alpha, threshold):
+    g_comp = G_mag
+    g_comp[G_mag < threshold] *= alpha
+    return g_comp
+
+
+class ThreshCompressor:
+    def __init__(self, alpha, threshold):
+        self.comp = lambda x: compressive_function_thresh(x, alpha, threshold)
+
+
 @jit(nopython=True)
 def diffusion_loop(img_out, idx, k, h=1):
     for time in range(k):
@@ -70,15 +109,6 @@ class FlowDecomposer:
 
         return flow_global, flow_local
 
-    def __compressive_function(self, G_mag, alpha, beta):
-        eps = 0.1
-        beta = 1 - beta
-        G_mag[G_mag < eps] = eps
-        g_comp = (alpha / G_mag) * np.power((G_mag / alpha), beta)
-        g_comp[g_comp < 1] = 1
-
-        return g_comp
-
     def __flow_mag(self, flow, normalize=True):
         tmp = np.sqrt(np.multiply(flow[:, :, 0], flow[:, :, 0]) +
                       np.multiply(flow[:, :, 1], flow[:, :, 1]))
@@ -109,9 +139,17 @@ class FlowDecomposer:
         return img_out.astype(img.dtype)
 
 
+attenuation_functions = {
+    "linear": None,
+    "log": lambda G_mag, alpha, beta: np.log(1 + alpha * G_mag) / np.log(1 + alpha),
+    "compressive": None,
+}
+
+
 class OnlineLandmarkMagnifier:
     def __init__(self, landmarks=neurovc.LM_MOUTH, alpha=15, reference=None):
         self._augmentor = None
+        self._attenuation_function = None
         try:
             import torch
             self.OF_inst = RAFTOpticalFlow()
@@ -206,7 +244,7 @@ class FacialMeshProcessor:
     eye_right_boundary = [285, 417, 465, 357, 350, 349, 348, 347, 346,
                           340, 265, 353, 276, 283, 282, 295]
     forehead_temp_boundary = [109, 69, 66, 65, 55, 8, 285, 295, 282, 334, 333, 332, 297, 338, 10]
-    _lms = [mouth_boundary_outer, eye_left_boundary, eye_right_boundary]
+    _lms = [mouth_boundary_outer, eye_left_boundary, eye_right_boundary, forehead_temp_boundary]
 
     def __init__(self):
         mp_drawing = mp.solutions.drawing_utils
