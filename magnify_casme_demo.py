@@ -1,3 +1,8 @@
+"""
+magnify_casme_demo
+Copyright 2024 by Philipp Flotho, All rights reserved.
+"""
+
 import cv2
 
 from os.path import isdir, join

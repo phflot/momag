@@ -1,4 +1,8 @@
 __author__ = "Philipp Flotho"
+"""
+flow_processing
+Copyright 2024 by Philipp Flotho, All rights reserved.
+"""
 
 from numba import jit
 from scipy.spatial import ConvexHull
@@ -9,7 +13,6 @@ import neurovc
 from neurovc.momag.framewarpers import *
 from neurovc.raft import RAFTOpticalFlow
 from neurovc.raft.utils.flow_viz import flow_to_image
-
 
 import mediapipe as mp
 
@@ -146,21 +149,9 @@ class OnlineLandmarkMagnifier:
             self._attenuation_function = ConstCompressor(alpha)
         else:
             self._attenuation_function = attenuation_function
-        try:
-            import torch
-            self.OF_inst = RAFTOpticalFlow()
-            self._augmentor = lambda f: f
-        except:
-            print("torch not available, using opencv interface")
-            OF_inst = cv2.DISOpticalFlow.create(cv2.DISOpticalFlow_PRESET_MEDIUM)
-            OF_inst.setUseSpatialPropagation(True)
-            OF_inst.setFinestScale(0)
-            OF_inst.setVariationalRefinementDelta(0.2)
-            OF_inst.setVariationalRefinementGamma(0.8)
-            OF_inst.setVariationalRefinementAlpha(4)
-            OF_inst.setVariationalRefinementIterations(10)
-            self.OF_inst = OF_inst
-            self._augmentor = lambda f: cv2.cvtColor(f, cv2.COLOR_RGB2GRAY)
+
+        self.OF_inst = RAFTOpticalFlow()
+        self._augmentor = lambda f: f
 
         mp_drawing = mp.solutions.drawing_utils
         mp_face_mesh = mp.solutions.face_mesh

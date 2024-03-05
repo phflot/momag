@@ -1,3 +1,8 @@
+"""
+magnify_casme_demo
+Copyright 2024 by Philipp Flotho, All rights reserved.
+"""
+
 from neurovc.util import VideoReader, VideoWriter
 from neurovc.momag import OnlineLandmarkMagnifier
 import neurovc as nvc

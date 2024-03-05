@@ -1,10 +1,11 @@
 __author__ = "Philipp Flotho"
 """
 multimodal_cam_calib
-Copyright 2021 by Philipp Flotho, All rights reserved.
+Copyright 2024 by Philipp Flotho, All rights reserved.
 """
 import numpy as np
 import cv2
+import os
 
 
 class VideoLooper:
@@ -82,9 +83,14 @@ class VideoWriter:
         if self.writer is None:
             self.height, self.width = frame.shape[:2]
 
-            fourcc = cv2.VideoWriter_fourcc(*'mp4v') #cv2.VideoWriter_fourcc('M', 'J', 'P', 'G')
+            file_type = os.path.splitext(self.filepath)[1]
+            if file_type == ".avi":
+                fourcc = cv2.VideoWriter_fourcc(*'XVID')
+            elif file_type == ".mp4":
+                fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+            elif file_type == ".mov":
+                fourcc = cv2.VideoWriter_fourcc(*'mp4v')
             self.writer = cv2.VideoWriter(self.filepath, fourcc, 50, (self.width, self.height))
-            # self.writer = cv2.VideoWriter(self.filepath, cv2.VideoWriter_fourcc('D', 'I', 'V', 'X'), self.framerate, (self.width, self.height))
 
         if len(frame.shape) < 3:
             self.n_channels = 1
