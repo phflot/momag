@@ -47,7 +47,8 @@ class RAFTOpticalFlow:
                  path=None,
                  small=False,
                  mixed_precision=False,
-                 alternate_corr=False):
+                 alternate_corr=False,
+                 device='cuda' if torch.cuda.is_available() else 'cpu'):
 
         if model is None:
             model_path = join(dirname(abspath(getsourcefile(lambda: 0))), "models")
@@ -70,10 +71,11 @@ class RAFTOpticalFlow:
         )
 
         model = torch.nn.DataParallel(RAFT(args))
-        model.load_state_dict(torch.load(args.model))
+        model.load_state_dict(
+            torch.load(args.model, map_location=torch.device(device)), strict=False)
 
         self.model = model.module
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+        self.device = device
         self.model.to(self.device)
         self.model.eval()
         self.last_flow = None
